@@ -7,7 +7,7 @@
     <question id="0">
         <answer>1094</answer>
         <sql>
-            select count(*) from trajectory.tracking;
+            SELECT COUNT(*) FROM trajectory.tracking;
         </sql>
     </question>
 <!--END OF EXAMPLE -->

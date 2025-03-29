@@ -4,7 +4,7 @@
     <xs:element name="data">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="USERNAME" type="xs:string"/>
+                <xs:element name="" type="xs:string"/>
                 <xs:element name="question" maxOccurs="25">
                     <xs:complexType>
                         <xs:sequence>

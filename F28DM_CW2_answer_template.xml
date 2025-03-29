@@ -1,7 +1,7 @@
 <data>
 
 <!--UPDATE WITH YOUR USERNAME -->
-    <USERNAME>abc123</USERNAME>
+    <USERNAME>am2366</USERNAME>
 
 <!--START OF EXAMPLE -->
     <question id="0">
@@ -15,30 +15,48 @@
 <!--START OF YOUR ANSWERS and SQL STATEMENTS-->
 
     <question id="1">
-        <answer></answer>
+        <answer>"The Lodger (1898)"</answer>
         <sql>
-  
+            SELECT title
+            FROM imdb.movies  
+            ORDER BY year ASC LIMIT 1;
         </sql>
     </question>
 
     <question id="2">
-        <answer></answer>
+        <answer>2</answer>
         <sql>
-       
+       SELECT COUNT(*)
+        FROM (
+            SELECT m.movieId, COUNT(m2d.directorId)  
+            FROM imdb.movies m
+            JOIN imdb.movies2directors m2d ON m.movieId = m2d.movieId
+            GROUP BY m.movieId  
+            HAVING COUNT(m2d.directorId) > 7
+        ) AS movies_with_many_directors;
+
         </sql>
-    </question>
+    </question> 
 
     <question id="3">
-        <answer></answer>
+        <answer>1940</answer>
         <sql>
-       
+            SELECT m.year, COUNT(m2d.directorId) AS director_count  
+            FROM imdb.movies m
+            JOIN imdb.movies2directors m2d ON m.movieId = m2d.movieId
+            GROUP BY m.movieId, m.year  
+            ORDER BY director_count DESC
+            LIMIT 1;
+
         </sql>
     </question>
 
     <question id="4">
         <answer></answer>
         <sql>
-       
+
+
+
         </sql>
     </question>
 

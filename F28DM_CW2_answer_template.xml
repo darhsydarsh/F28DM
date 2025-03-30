@@ -68,21 +68,22 @@
     </question>
 
     <question id="5">
-        <answer>135</answer>
+        <answer>3</answer>
         <sql>
-        <!-- not sure -->
-            SELECT COUNT(*)
+
+        SELECT COUNT(*)
             FROM (
-                    SELECT LEAST(m1.actorid, m2.actorid) AS actor1, 
-                    GREATEST(m1.actorid, m2.actorid) AS actor2, 
-                    COUNT(*) 
+            SELECT COUNT(*) 
                 FROM imdb.movies2actors m1
-                JOIN imdb.movies2actors m2 
-                ON m1.movieid = m2.movieid
-                WHERE m1.actorid != m2.actorid
-                GROUP BY actor1, actor2
-                HAVING COUNT(*) > 10
-            )
+                JOIN imdb.movies2actors m2 ON m1.movieid = m2.movieid
+                    AND m1.actorid != m2.actorid
+                    AND LEAST(m1.actorid, m2.actorid) = m1.actorid
+                    
+                JOIN imdb.actors a1 ON m1.actorid = a1.actorid
+                JOIN imdb.actors a2 ON m2.actorid = a2.actorid
+                GROUP BY a1.name, a2.name
+                HAVING COUNT(*) > 10)
+                
         </sql>
     </question>
 
@@ -137,21 +138,46 @@
      wha is the time-->
         <answer></answer>
         <sql>
+            
 
         </sql>
     </question>
 
     <question id="10">
     <!-- Find the actor id for the person who starred in over 43 movies before 2015, 
-    including at least 1 directed by Steven Spielberg -->
-        <answer></answer>
+    including at least 1 directed by Steven Spielberg 
+    "Welker, Frank"? - person w over 43 movies in total
+    -->
+        <answer>1694741</answer>
         <sql>
-            
+
+<!-- 
+            SELECT m2a.actorid, COUNT(m2a.actorid)
+            FROM imdb.movies2actors m2a 
+            GROUP BY m2a.actorid
+            HAVING COUNT(m2a.movieid) > 43 -->
+
+
+            SELECT a.actorid, a.name, COUNT(m2a.movieid) AS movie_count
+            FROM imdb.movies2actors m2a
+            JOIN imdb.movies m ON m2a.movieid = m.movieid                 
+            JOIN imdb.actors a ON m2a.actorid = a.actorid                  
+            WHERE m.year < 2015                                            
+            AND m2a.actorid IN (                                         
+                SELECT DISTINCT m2a.actorid
+                FROM imdb.movies2actors m2a
+                JOIN imdb.movies2directors m2d ON m2a.movieid = m2d.movieid
+                JOIN imdb.directors d ON m2d.directorid = d.directorid
+                WHERE d.name = 'Spielberg, Steven'
+            )
+            GROUP BY a.actorid, a.name
+            HAVING COUNT(m2a.movieid) > 43;
+
         </sql>
     </question>
 
     <question id="11">
-        <answer></answer>
+        <answer></answer>   
         <sql>
        
         </sql>

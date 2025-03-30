@@ -33,7 +33,7 @@
             JOIN imdb.movies2directors m2d ON m.movieId = m2d.movieId
             GROUP BY m.movieId  
             HAVING COUNT(m2d.directorId) > 7
-        ) AS movies_with_many_directors;
+        ) 
 
         </sql>
     </question> 
@@ -52,32 +52,65 @@
     </question>
 
     <question id="4">
-        <answer></answer>
+        <answer>2500324</answer>
         <sql>
-
-
-
+            SELECT m2a2.actorid, COUNT(*) AS coactor_count
+                FROM imdb.movies2actors m2a1
+                JOIN imdb.movies2actors m2a2 ON m2a1.movieid = m2a2.movieid
+                WHERE m2a1.actorid = (SELECT actorid 
+                                        FROM imdb.actors 
+                                        WHERE name = 'Hanks, Tom')
+                AND m2a2.actorid != m2a1.actorid
+            GROUP BY m2a2.actorid
+            ORDER BY coactor_count DESC
+            LIMIT 1;
         </sql>
     </question>
 
     <question id="5">
-        <answer></answer>
+        <answer>135</answer>
         <sql>
-       
+        <!-- not sure -->
+            SELECT COUNT(*)
+            FROM (
+                    SELECT LEAST(m1.actorid, m2.actorid) AS actor1, 
+                    GREATEST(m1.actorid, m2.actorid) AS actor2, 
+                    COUNT(*) 
+                FROM imdb.movies2actors m1
+                JOIN imdb.movies2actors m2 
+                ON m1.movieid = m2.movieid
+                WHERE m1.actorid != m2.actorid
+                GROUP BY actor1, actor2
+                HAVING COUNT(*) > 10
+            )
         </sql>
     </question>
 
     <question id="6">
-        <answer></answer>
+        <answer>1930</answer>
         <sql>
-       
+            SELECT (m.year / 10) * 10 AS decade, 
+                AVG(CAST(r.rank AS FLOAT)) AS avg_rating
+            FROM imdb.movies m
+            JOIN imdb.ratings r ON m.movieid = r.movieid
+            GROUP BY decade
+            ORDER BY avg_rating DESC
+            LIMIT 1;
         </sql>
     </question>
 
     <question id="7">
-        <answer></answer>
+        <answer>18</answer>
         <sql>
-       
+
+       SELECT count(*) as some_name
+            FROM(
+            SELECT m.movieid
+            FROM imdb.movies m
+            LEFT JOIN imdb.movies2directors m2d ON m.movieid = m2d.movieid
+            WHERE m2d.directorid IS NULL
+            )
+
         </sql>
     </question>
 

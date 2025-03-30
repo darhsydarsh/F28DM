@@ -115,23 +115,38 @@
     </question>
 
     <question id="8">
-        <answer></answer>
+    <!-- how many movies have an actor/actress 
+    written and directed but not starred in? 
+    (i.e. the person that wrote and directed
+     the movie is an actor/actress but they didn't star in their own movie). -->
+        <answer>35</answer>
         <sql>
-       
+       SELECT COUNT(DISTINCT m2w.writerid) AS director_writer_count
+        FROM imdb.movies2writers m2w
+
+        INNER JOIN imdb.movies2directors m2d ON m2w.writerid = m2d.directorid 
+        LEFT JOIN imdb.movies2actors m2a ON m2w.movieid = m2a.movieid AND m2w.writerid = m2a.actorid       
+
+        WHERE m2a.actorid IS NULL; 
         </sql>
     </question>
 
     <question id="9">
+    <!-- Identify the Director (by director ID)
+     with the most movies over 160 minutes long. 
+     wha is the time-->
         <answer></answer>
         <sql>
-       
+
         </sql>
     </question>
 
     <question id="10">
+    <!-- Find the actor id for the person who starred in over 43 movies before 2015, 
+    including at least 1 directed by Steven Spielberg -->
         <answer></answer>
         <sql>
-       
+            
         </sql>
     </question>
 

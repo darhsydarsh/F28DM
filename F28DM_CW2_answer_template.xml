@@ -15,7 +15,7 @@
 <!--START OF YOUR ANSWERS and SQL STATEMENTS-->
 
     <question id="1">
-        <answer>"The Lodger (1898)"</answer>
+        <answer>The Lodger (1898)</answer>
         <sql>
             SELECT title
             FROM imdb.movies  
@@ -26,13 +26,13 @@
     <question id="2">
         <answer>2</answer>
         <sql>
-       SELECT COUNT(*)
+    SELECT COUNT(*)
         FROM (
-            SELECT m.movieId, COUNT(m2d.directorId)  
+            SELECT m.movieId, COUNT(distinct(m2d.directorId))  
             FROM imdb.movies m
             JOIN imdb.movies2directors m2d ON m.movieId = m2d.movieId
             GROUP BY m.movieId  
-            HAVING COUNT(m2d.directorId) > 7
+            HAVING COUNT(distinct(m2d.directorId))  > 7
         ) 
 
         </sql>
@@ -76,9 +76,9 @@
             SELECT COUNT(*) 
                 FROM imdb.movies2actors m1
                 JOIN imdb.movies2actors m2 ON m1.movieid = m2.movieid
-                    AND m1.actorid != m2.actorid
-                    AND LEAST(m1.actorid, m2.actorid) = m1.actorid
-                    
+                AND m1.actorid != m2.actorid
+                AND LEAST(m1.actorid, m2.actorid) = m1.actorid
+                        
                 JOIN imdb.actors a1 ON m1.actorid = a1.actorid
                 JOIN imdb.actors a2 ON m2.actorid = a2.actorid
                 GROUP BY a1.name, a2.name
@@ -101,16 +101,14 @@
     </question>
 
     <question id="7">
-        <answer>18</answer>
+        <answer>14</answer>
         <sql>
 
-       SELECT count(*) as some_name
-            FROM(
-            SELECT m.movieid
-            FROM imdb.movies m
-            LEFT JOIN imdb.movies2directors m2d ON m.movieid = m2d.movieid
-            WHERE m2d.directorid IS NULL
-            )
+        SELECT COUNT(DISTINCT m2d.movieid) as movies_no_genre
+            FROM imdb.movies m	
+            JOIN imdb.movies2directors m2d ON m.movieid = m2d.movieid
+            WHERE m2d.genre IS NULL
+	
 
         </sql>
     </question>
@@ -120,15 +118,15 @@
     written and directed but not starred in? 
     (i.e. the person that wrote and directed
      the movie is an actor/actress but they didn't star in their own movie). -->
-        <answer>35</answer>
+        <answer>1</answer>
         <sql>
-       SELECT COUNT(DISTINCT m2w.writerid) AS director_writer_count
+    	SELECT COUNT(DISTINCT m2w.movieid) 
         FROM imdb.movies2writers m2w
-
-        INNER JOIN imdb.movies2directors m2d ON m2w.writerid = m2d.directorid 
-        LEFT JOIN imdb.movies2actors m2a ON m2w.movieid = m2a.movieid AND m2w.writerid = m2a.actorid       
-
-        WHERE m2a.actorid IS NULL; 
+        JOIN imdb.movies2directors m2d ON m2w.movieid = m2d.movieid
+        LEFT JOIN imdb.movies2actors m2a ON m2w.movieid = m2a.movieid 
+            AND m2a.actorid = m2w.writerid 
+        WHERE m2w.writerid = m2d.directorid
+        AND m2a.actorid IS NULL;  
         </sql>
     </question>
 
@@ -136,9 +134,15 @@
     <!-- Identify the Director (by director ID)
      with the most movies over 160 minutes long. 
      wha is the time-->
-        <answer></answer>
+        <answer>54501</answer>
         <sql>
-            
+            SELECT directorid, COUNT(DISTINCT run.movieid)  
+            FROM imdb.runningtimes run
+            JOIN imdb.movies2directors m2d ON m2d.movieid = run.movieid 
+            WHERE run.time1>160
+            GROUP BY m2d.directorid
+            ORDER BY COUNT(DISTINCT run.movieid) DESC
+            LIMIT 1;
 
         </sql>
     </question>
@@ -151,14 +155,7 @@
         <answer>1694741</answer>
         <sql>
 
-<!-- 
-            SELECT m2a.actorid, COUNT(m2a.actorid)
-            FROM imdb.movies2actors m2a 
-            GROUP BY m2a.actorid
-            HAVING COUNT(m2a.movieid) > 43 -->
-
-
-            SELECT a.actorid, a.name, COUNT(m2a.movieid) AS movie_count
+            SELECT a.actorid, a.name, COUNT(Distinct (m2a.movieid)) AS movie_count
             FROM imdb.movies2actors m2a
             JOIN imdb.movies m ON m2a.movieid = m.movieid                 
             JOIN imdb.actors a ON m2a.actorid = a.actorid                  
@@ -171,47 +168,124 @@
                 WHERE d.name = 'Spielberg, Steven'
             )
             GROUP BY a.actorid, a.name
-            HAVING COUNT(m2a.movieid) > 43;
+            HAVING COUNT(Distinct (m2a.movieid))> 43;
 
         </sql>
     </question>
 
     <question id="11">
-        <answer></answer>   
+        <answer>74</answer>   
         <sql>
-       
+       SELECT COUNT(*)
+        FROM scenicornot.locations loc
+        WHERE ST_DWithin(loc.geom_bng, ST_SetSRID(ST_MakePoint(530000, 180000), 27700), 5000);
         </sql>
     </question>
 
     <question id="12">
-        <answer></answer>
+    <!-- Based on using the hexgrid (10km cells) layer provided, 
+    which region (cell_id) with
+    at least 3 sample locations has the highest average scenic scores? -->
+        <answer>616</answer>
         <sql>
-       
+            SELECT hex10.cell_id, COUNT(*)
+            FROM scenicornot.hexgrid10km hex10
+            JOIN scenicornot.locations loca ON ST_Contains(hex10.geom, loca.geom_bng)
+            GROUP BY hex10.cell_id
+            HAVING COUNT(*) > 2
+            ORDER BY AVG(loca.average) DESC
+            LIMIT 1;
+
         </sql>
     </question>
 
     <question id="13">
-        <answer></answer>
+    <!-- What is the largest total number of 
+    votes cast within a single hex cell? -->
+        <answer>12016</answer>
         <sql>
-       
+            SELECT SUM(CAST(num AS NUMERIC)) AS total_votes
+            FROM scenicornot.hexgrid10km hex10
+            JOIN scenicornot.locations loca ON ST_Contains(hex10.geom, loca.geom_bng)
+            JOIN UNNEST(STRING_TO_ARRAY(loca.votes, ',')) AS num 
+                ON TRUE 
+            GROUP BY hex10.cell_id
+            ORDER BY total_votes DESC
+            LIMIT 1;
         </sql>
     </question>
-
     <question id="14">
         <answer></answer>
         <sql>
-       
+       <!-- 1758/9 cor -->
+        WITH hex_average AS (
+            SELECT hex10.cell_id, AVG(loc.average) AS avg_scenic_score
+            FROM scenicornot.hexgrid10km hex10
+            JOIN scenicornot.locations loc ON ST_Contains(hex10.geom, loc.geom_bng)
+            GROUP BY hex10.cell_id
+        ),
+
+        neighbours_average AS (
+            SELECT 
+                h1.cell_id AS cell_id, 
+                h2.cell_id AS neighbor_cell_id
+            FROM scenicornot.hexgrid10km h1
+            JOIN scenicornot.hexgrid10km h2 
+                ON ST_Touches(h1.geom, h2.geom)
+        ),
+
+        hex_diff AS (
+            SELECT 
+                n.cell_id, 
+                n.neighbor_cell_id, 
+                ABS(h1.avg_scenic_score - h2.avg_scenic_score) AS score_difference
+            FROM neighbours_average n
+            JOIN hex_average h1 ON n.cell_id = h1.cell_id
+            JOIN hex_average h2 ON n.neighbor_cell_id = h2.cell_id
+        )
+
+        SELECT cell_id, neighbor_cell_id, score_difference
+        FROM hex_diff
+        ORDER BY score_difference DESC
+        LIMIT 1;
+
+
         </sql>
     </question>
 
     <question id="15">
         <answer></answer>
         <sql>
-       
+
+        WITH quake_periods AS (
+            SELECT 
+                DATE_TRUNC('day', '2010-01-01 00:00:00'::timestamp) + 
+                INTERVAL '48 hours' * FLOOR(EXTRACT(EPOCH FROM (q.datetime - '2010-01-01 00:00:00'::timestamp)) / (48 * 3600)) 
+                AS period_start,
+                COUNT(*) AS quake_count
+            FROM quakes.scotquakes q
+            GROUP BY period_start
+        )
+
+        SELECT period_start AS start_time, (period_start + INTERVAL '48 hours') AS end_time, quake_count
+        FROM quake_periods
+        ORDER BY quake_count DESC;
+
         </sql>
     </question>
 
     <question id="16">
+        <answer>0</answer>
+        <sql>
+        SELECT COUNT(DISTINCT loc.fid) AS num_locations
+            FROM scenicornot.locations loc
+            JOIN quakes.scotquakes q 
+            ON ST_DWithin(loc.geom_bng, q.geom, 100);
+
+        </sql>
+    </question>
+
+    <question id="17">
         <answer></answer>
         <sql>
        

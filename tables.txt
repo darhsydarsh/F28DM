@@ -1,0 +1,52 @@
+imdb
+    actors
+        actorid
+        name
+        sex
+    directors
+        directorId
+        name
+        rate
+        gross
+        num
+    movies
+        movieId
+        title
+        year
+    movies2actors
+        movieId
+        actorid
+        as_character
+        leadingid
+    movies2directors
+        movieid
+        directorid
+        genre
+    movies2writers
+        movieid
+        writerid
+        addition
+    runningtimes
+        movieid
+        time
+        addition
+        time1
+    
+
+
+
+
+
+
+senicornot
+    hexgrid10km
+        cell_id
+        geom
+    locations
+        Findid
+        locationslon
+        average
+        variance
+        votes
+        geographic uri
+        geom_bng

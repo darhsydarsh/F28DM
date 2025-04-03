@@ -215,7 +215,7 @@
         </sql>
     </question>
     <question id="14">
-        <answer></answer>
+        <answer>1688, 1618</answer>
         <sql>
        <!-- 1758/9 cor -->
         WITH hex_average AS (
@@ -244,10 +244,11 @@
             JOIN hex_average h2 ON n.neighbor_cell_id = h2.cell_id
         )
 
-        SELECT cell_id, neighbor_cell_id, score_difference
+        SELECT cell_id, neighbor_cell_id
         FROM hex_diff
         ORDER BY score_difference DESC
         LIMIT 1;
+
 
 
         </sql>
@@ -285,6 +286,7 @@
         
         </sql>
     </question>
+
         <!-- 
         ans:33
         WITH clusters AS (
@@ -298,10 +300,6 @@
         WHERE cluster_id IS NOT NULL; 
         
         -->
-
-
-
-
 
     <question id="18">
         <answer></answer>
@@ -346,24 +344,48 @@
     </question>
 
     <question id="22">
-        <answer></answer>
+        <answer>08</answer>
         <sql>
-       
+            WITH dateTrunc AS (
+                SELECT DATE_TRUNC('month', fr.date_taken) AS month_truncated
+                FROM flickr.flickr_edin fr
+            )
+            SELECT month_truncated, COUNT(*) AS tr
+            FROM dateTrunc
+            GROUP BY month_truncated
+            ORDER BY tr DESC
+            limit 1;
+
         </sql>
     </question>
 
 
     <question id="23">
-        <answer></answer>
+        <answer>"19473027@N00"</answer>
         <sql>
-       
+            SELECT fr.userid, COUNT(DISTINCT gr.id) as locations
+            FROM flickr.flickr_edin fr
+            JOIN flickr.grid100m gr on ST_Contains(gr.geom, fr.geom)
+            GROUP BY fr.userid
+            ORDER BY locations DESC
+            limit 1;
         </sql>
     </question>
 
     <question id="24">
-        <answer></answer>
+        <answer>87</answer>
         <sql>
-       
+       WITH avenues AS(
+            SELECT osm_name, COUNT(DISTINCT osm_id)
+            FROM accident.network
+            WHERE osm_name ILIKE '%avenue%'
+            GROUP by osm_name
+            having count (distinct osm_id) > 1
+            
+        )
+
+        SELECT COUNT(*)
+        FROM avenues a      
         </sql>
     </question>
 

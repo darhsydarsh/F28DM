@@ -118,15 +118,14 @@
     written and directed but not starred in? 
     (i.e. the person that wrote and directed
      the movie is an actor/actress but they didn't star in their own movie). -->
-        <answer>1</answer>
+        <answer>35</answer>
         <sql>
-    	SELECT COUNT(DISTINCT m2w.movieid) 
+       SELECT COUNT(DISTINCT m2w.writerid) AS director_writer_count
         FROM imdb.movies2writers m2w
-        JOIN imdb.movies2directors m2d ON m2w.movieid = m2d.movieid
-        LEFT JOIN imdb.movies2actors m2a ON m2w.movieid = m2a.movieid 
-            AND m2a.actorid = m2w.writerid 
-        WHERE m2w.writerid = m2d.directorid
-        AND m2a.actorid IS NULL;  
+        JOIN imdb.movies2directors m2d ON m2w.writerid = m2d.directorid 
+        LEFT JOIN imdb.movies2actors m2a ON m2w.movieid = m2a.movieid AND m2w.writerid = m2a.actorid       
+
+        WHERE m2a.actorid IS NULL; 
         </sql>
     </question>
 
@@ -202,16 +201,17 @@
     <question id="13">
     <!-- What is the largest total number of 
     votes cast within a single hex cell? -->
-        <answer>12016</answer>
+        <answer>2222</answer>
         <sql>
-            SELECT SUM(CAST(num AS NUMERIC)) AS total_votes
+
+            SELECT hex10.cell_id, COUNT(loc.fid) AS num_votes
             FROM scenicornot.hexgrid10km hex10
-            JOIN scenicornot.locations loca ON ST_Contains(hex10.geom, loca.geom_bng)
-            JOIN UNNEST(STRING_TO_ARRAY(loca.votes, ',')) AS num 
-                ON TRUE 
+            JOIN scenicornot.locations loc ON ST_Contains(hex10.geom, loc.geom_bng)
+            CROSS JOIN LATERAL UNNEST(STRING_TO_ARRAY(loc.votes, ',')) AS num
             GROUP BY hex10.cell_id
-            ORDER BY total_votes DESC
-            LIMIT 1;
+            ORDER BY num_votes DESC
+            limit 1;
+
         </sql>
     </question>
     <question id="14">
@@ -277,39 +277,64 @@
     <question id="16">
         <answer>0</answer>
         <sql>
-        SELECT COUNT(DISTINCT loc.fid) AS num_locations
-            FROM scenicornot.locations loc
+
+            SELECT COUNT(DISTINCT hex10.cell_id)
+            FROM scenicornot.hexgrid10km hex10 
             JOIN quakes.scotquakes q 
-            ON ST_DWithin(loc.geom_bng, q.geom, 100);
-
+            ON ST_DWithin(ST_Transform(hex10.geom, 27700),ST_Transform(q.geom, 27700),100);
+        
         </sql>
     </question>
+        <!-- 
+        ans:33
+        WITH clusters AS (
 
-    <question id="17">
-        <answer></answer>
-        <sql>
-       
-        </sql>
-    </question>
+            SELECT ST_ClusterDBSCAN(q.geom, 15000, 5) OVER () AS cluster_id
+            FROM quakes.scotquakes q
+        ) 
+
+        SELECT COUNT(DISTINCT(cluster_id))
+        FROM clusters
+        WHERE cluster_id IS NOT NULL; 
+        
+        -->
+
+
+
+
 
     <question id="18">
         <answer></answer>
+        <!-- What was the average walking speed for userid = ‘p3’ ? -->
         <sql>
-       
+
+            SELECT AVG(spd) 
+            FROM trajectory.tracking tr
+            WHERE tr.userid = 'p3'
+
+                
+                
         </sql>
     </question>
 
     <question id="19">
-        <answer></answer>
+        <answer>"p1"</answer>
         <sql>
-       
+
+
+       SELECT COUNT(tr.geom) as trac, tr.userid
+        FROM Trajectory.tracking tr
+        GROUP BY tr.userid
+        ORDER BY trac DESC
+        limit 1;
+
         </sql>
     </question>
 
     <question id="20">
         <answer></answer>
         <sql>
-       
+
         </sql>
     </question>
 
